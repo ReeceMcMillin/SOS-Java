@@ -9,9 +9,9 @@ public class DataStructures {
      * @see Pair
      */
     public static class Triplet implements Comparable<Triplet> {
-        public Pair first;
-        public Pair second;
-        public Pair third;
+        public final Pair first;
+        public final Pair second;
+        public final Pair third;
 
         public String toString() {
             return String.format("[%s, %s, %s]", this.first, this.second, this.third);
@@ -38,8 +38,8 @@ public class DataStructures {
      * @see Triplet
      */
     public static class Pair implements Comparable<Pair> {
-        public int first;
-        public int second;
+        public final int first;
+        public final int second;
 
         public String toString() {
             return String.format("(%s, %s)", this.first, this.second);

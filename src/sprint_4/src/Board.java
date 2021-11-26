@@ -1,8 +1,10 @@
 package sprint_4.src;
 
 import java.util.TreeSet;
+
 import sprint_4.src.Tile.TileValue;
 import sprint_4.src.DataStructures.*;
+
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -18,14 +20,11 @@ public class Board {
     }
 
     private GameMode gameMode = GameMode.General;
+    private Tile[][] grid;
+    private TreeSet<Triplet> wins;
 
-    // TODO: make this private
-    public Tile[][] grid;
-
-    public TreeSet<Triplet> wins;
-
-    public Player playerOne = new Player(TileValue.S, "Player 1");
-    public Player playerTwo = new Player(TileValue.O, "Player 2");
+    public final Player playerOne = new Player(TileValue.S, "Player 1");
+    public final Player playerTwo = new Player(TileValue.O, "Player 2");
 
     private Player turn = playerOne;
 
@@ -46,6 +45,10 @@ public class Board {
         BOARD_SIZE = boardSize;
     }
 
+    public void setGrid(Tile[][] grid) {
+        this.grid = grid;
+    }
+
     public void initBoard() {
         this.playerOne.resetPoints();
         this.playerTwo.resetPoints();
@@ -58,14 +61,6 @@ public class Board {
                 grid[row][col] = new Tile(TileValue.None);
             }
         }
-    }
-
-    public int getTotalRows() {
-        return BOARD_SIZE;
-    }
-
-    public int getTotalColumns() {
-        return BOARD_SIZE;
     }
 
     public void setBoardSize(int boardSize) {
@@ -100,11 +95,11 @@ public class Board {
     }
 
     public Tile getTile(int row, int column) {
-        if (row >= 0 && row < 9 && column >= 0 && column < 9) {
-            return grid[row][column];
-        } else {
-            return null;
-        }
+        assert (row >= 0 && row < this.getBoardSize() &&
+                column >= 0 && column < this.getBoardSize()) :
+                String.format("getTile(%s, %s) out of bounds for board size %s.", row, column, this.getBoardSize());
+
+        return grid[row][column];
     }
 
     public ArrayList<Pair> getEmptyTiles() {
@@ -123,28 +118,40 @@ public class Board {
         return turn;
     }
 
+    public boolean boardHasWinner() {
+        return this.getGameState() == State.PLAYER_ONE_WON || this.getGameState() == State.PLAYER_TWO_WON;
+    }
+
     public void makeMove(int row, int column) {
-        if (row >= 0 && row < 9 && column >= 0 && column < 9 && grid[row][column].getValue() == TileValue.None) {
+        assert (0 <= row && row < this.getBoardSize() &&
+                0 <= column && column < this.getBoardSize())
+                : String.format("makeMove(%s, %s) out of bounds for board size %s.", row, column, this.getBoardSize());
+
+        if (grid[row][column].getValue() == TileValue.None) {
             grid[row][column] = (turn == playerOne) ? playerOne.getTile() : playerTwo.getTile();
             updateGameState(turn);
             turn = (turn == playerOne) ? playerTwo : playerOne;
         }
-        if (turn.getStyle() == Player.PlayStyle.Computer && !isFull()) {
+        if (this.boardHasWinner()) return;
+
+        if (turn.getStyle() == Player.PlayStyle.Computer
+                && !isFull()) {
             makeComputerMove();
         }
     }
 
     public void makeComputerMove() {
+        if (this.boardHasWinner()) return;
+
         ArrayList<Pair> emptyTiles = getEmptyTiles();
         Pair choice = emptyTiles.get(RANDOM.nextInt(emptyTiles.size()));
         Tile tile = new Tile(TileValue.values()[RANDOM.nextInt(2)]);
-        if (emptyTiles.size() <= 1) {
-            grid[choice.first][choice.second] = tile;
-            updateGameState(turn);
-            return;
-        }
+
         grid[choice.first][choice.second] = tile;
         updateGameState(turn);
+
+        if (emptyTiles.size() <= 1) return;
+
         turn = (turn == playerOne) ? playerTwo : playerOne;
         if (turn.getStyle() == Player.PlayStyle.Computer) {
             makeComputerMove();
@@ -163,12 +170,16 @@ public class Board {
     }
 
     private void updateGameState(Player turn) {
+        // This logic is pretty bad! It currently uses hasWonSimple to register wins for hasWonGeneral.
+        // hasWonSimple should be specifically for checking if a simple game has been won.
+        // This might be best accomplished by factoring out a new function to increment points, then using hasWonSimple to check point count every turn.
         switch (this.getGameMode()) {
             case Simple:
                 if (hasWonSimple(turn) == null) {
                     this.setGameState(this.isFull() ? State.DRAW : State.PLAYING);
                 } else {
                     gameState = (turn == playerOne) ? State.PLAYER_ONE_WON : State.PLAYER_TWO_WON;
+                    return;
                 }
                 break;
             case General: {
@@ -200,8 +211,8 @@ public class Board {
 
         // Horizontal Win
         // TODO refactor as iterators
-        for (int i = 0; i < getTotalRows(); i++) {
-            for (int j = 0; j < getTotalColumns() - 2; j++) {
+        for (int i = 0; i < getBoardSize(); i++) {
+            for (int j = 0; j < getBoardSize() - 2; j++) {
                 if (this.grid[i][j].getValue() == TileValue.S && this.grid[i][j + 1].getValue() == TileValue.O
                         && this.grid[i][j + 2].getValue() == TileValue.S) {
                     Triplet win = new Triplet(new Pair(i, j), new Pair(i, j + 1), new Pair(i, j + 2));
@@ -216,8 +227,8 @@ public class Board {
 
         // Vertical Win
         // TODO refactor as iterators
-        for (int i = 0; i < getTotalRows() - 2; i++) {
-            for (int j = 0; j < getTotalColumns(); j++) {
+        for (int i = 0; i < getBoardSize() - 2; i++) {
+            for (int j = 0; j < getBoardSize(); j++) {
                 if (this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j].getValue() == TileValue.O
                         && this.grid[i + 2][j].getValue() == TileValue.S) {
                     Triplet win = new Triplet(new Pair(i, j), new Pair(i + 1, j), new Pair(i + 2, j));
@@ -232,8 +243,8 @@ public class Board {
 
         // Diagonal Win
         // TODO refactor as iterators
-        for (int i = 0; i < getTotalRows() - 2; i++) {
-            for (int j = 0; j < getTotalColumns() - 2; j++) {
+        for (int i = 0; i < getBoardSize() - 2; i++) {
+            for (int j = 0; j < getBoardSize() - 2; j++) {
                 if (this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j + 1].getValue() == TileValue.O
                         && this.grid[i + 2][j + 2].getValue() == TileValue.S) {
                     Triplet win = new Triplet(new Pair(i, j), new Pair(i + 1, j + 1), new Pair(i + 2, j + 2));
@@ -247,8 +258,8 @@ public class Board {
         }
         // Backwards Diagonal Win
         // TODO refactor as iterators
-        for (int i = 0; i < getTotalRows() - 2; i++) {
-            for (int j = 2; j < getTotalColumns(); j++) {
+        for (int i = 0; i < getBoardSize() - 2; i++) {
+            for (int j = 2; j < getBoardSize(); j++) {
                 if (this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j - 1].getValue() == TileValue.O
                         && this.grid[i + 2][j - 2].getValue() == TileValue.S) {
                     Triplet win = new Triplet(new Pair(i, j), new Pair(i + 1, j - 1), new Pair(i + 2, j - 2));

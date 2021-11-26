@@ -1,10 +1,10 @@
 package sprint_4.test;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import sprint_4.src.Board;
 import sprint_4.src.GUI;
+import sprint_4.src.Player;
 import sprint_4.src.Tile;
 
 public class TestBoardGUI {
@@ -15,9 +15,6 @@ public class TestBoardGUI {
     public void setUp() {
         board = new Board(9);
     }
-
-    @After
-    public void tearDown() {}
 
     //AC1.1: Change game mode with fully initialized game state
     @Test
@@ -72,8 +69,8 @@ public class TestBoardGUI {
         gui.getBoard().initBoard();
 
         // Test that ALL tiles are registered as Tile.TileValue.None
-        for (int row = 0; row < board.getTotalRows(); row++) {
-            for (int col = 0; col < board.getTotalColumns(); col++) {
+        for (int row = 0; row < board.getBoardSize(); row++) {
+            for (int col = 0; col < board.getBoardSize(); col++) {
                 assert(gui.getBoard().getTile(row, col).getValue() == Tile.TileValue.None);
             }
         }
@@ -251,6 +248,25 @@ public class TestBoardGUI {
 
         assert(gui.getBoard().getGameMode() == Board.GameMode.General);
         assert(gui.getBoard().getGameState() == Board.State.DRAW);
+
+        try {
+            Thread.sleep(sleepTime);
+            gui.dispose();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testComputerCanMove() {
+        board = new Board(3);
+        GUI gui = new GUI(board);
+        board.playerTwo.setStyle(Player.PlayStyle.Computer);
+
+        board.makeMove(1, 2);
+
+        assert(board.playerTwo.getStyle() == Player.PlayStyle.Computer);
+        assert(gui.getBoard().getEmptyTiles().size() == 7);
 
         try {
             Thread.sleep(sleepTime);

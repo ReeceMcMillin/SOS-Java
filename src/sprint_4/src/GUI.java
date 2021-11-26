@@ -93,7 +93,7 @@ public class GUI extends JFrame {
             if (board.getBoardSize() >= board.MAX_BOARD_SIZE) {
                 return;
             }
-            board.grid = new Tile[board.getBoardSize() + 1][board.getBoardSize() + 1];
+            board.setGrid(new Tile[board.getBoardSize() + 1][board.getBoardSize() + 1]);
             board.setBoardSize(board.getBoardSize() + 1);
             board.initBoard();
             setContentPane();
@@ -106,7 +106,7 @@ public class GUI extends JFrame {
             if (board.getBoardSize() <= board.MIN_BOARD_SIZE) {
                 return;
             }
-            board.grid = new Tile[board.getBoardSize() - 1][board.getBoardSize() - 1];
+            board.setGrid(new Tile[board.getBoardSize() - 1][board.getBoardSize() - 1]);
             board.setBoardSize(board.getBoardSize() - 1);
             board.initBoard();
             setContentPane();
