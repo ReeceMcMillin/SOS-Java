@@ -3,14 +3,13 @@ package sprint_4.src;
 import java.util.TreeSet;
 
 import sprint_4.src.Tile.TileValue;
-import sprint_4.src.DataStructures.*;
-
+import sprint_4.src.Pair;
+import sprint_4.src.Triplet;
 import java.util.Random;
 import java.util.ArrayList;
 
 public class Board {
     private static final Random RANDOM = new Random();
-
     public enum State {
         INIT, PLAYING, DRAW, PLAYER_ONE_WON, PLAYER_TWO_WON
     }
@@ -170,109 +169,84 @@ public class Board {
     }
 
     private void updateGameState(Player turn) {
-        // This logic is pretty bad! It currently uses hasWonSimple to register wins for hasWonGeneral.
-        // hasWonSimple should be specifically for checking if a simple game has been won.
-        // This might be best accomplished by factoring out a new function to increment points, then using hasWonSimple to check point count every turn.
+        registerWin();
         switch (this.getGameMode()) {
             case Simple:
-                if (hasWonSimple(turn) == null) {
-                    this.setGameState(this.isFull() ? State.DRAW : State.PLAYING);
+                if (hasWonSimple()) {
+                    this.setGameState(turn == playerOne ? State.PLAYER_ONE_WON : State.PLAYER_TWO_WON);
                 } else {
-                    gameState = (turn == playerOne) ? State.PLAYER_ONE_WON : State.PLAYER_TWO_WON;
-                    return;
+                    this.setGameState(this.isFull() ? State.DRAW : State.PLAYING);
                 }
                 break;
             case General: {
                 if (this.isFull()) {
                     if (hasWonGeneral()) {
-                        gameState = (playerOne.getPoints() > playerTwo.getPoints()) ? State.PLAYER_ONE_WON : State.PLAYER_TWO_WON;
-                        return;
+                        this.setGameState(playerOne.getPoints() > playerTwo.getPoints() ? State.PLAYER_ONE_WON : State.PLAYER_TWO_WON);
                     } else if (hasDrawGeneral()) {
-                        gameState = State.DRAW;
+                        this.setGameState(State.DRAW);
                     }
                 }
-            }
-
-            Triplet win = hasWonSimple(turn);
-            if (win != null) {
-                if (!this.wins.contains(win)) {
-                    turn.incrementPoints();
-                }
-            } else if (isFull()) {
-                gameState = State.DRAW;
-            } else {
-                gameState = State.PLAYING;
             }
         }
     }
 
-    private Triplet hasWonSimple(Player turn) {
-        // TODO: less awful win checking
+    private void addWin(Triplet win) {
+        if (!this.wins.contains(win)) {
+            this.wins.add(win);
+            turn.incrementPoints();
+        }
+    }
 
-        // Horizontal Win
-        // TODO refactor as iterators
-        for (int i = 0; i < getBoardSize(); i++) {
-            for (int j = 0; j < getBoardSize() - 2; j++) {
-                if (this.grid[i][j].getValue() == TileValue.S && this.grid[i][j + 1].getValue() == TileValue.O
-                        && this.grid[i][j + 2].getValue() == TileValue.S) {
-                    Triplet win = new Triplet(new Pair(i, j), new Pair(i, j + 1), new Pair(i, j + 2));
-                    if (!this.wins.contains(win)) {
-                        this.wins.add(win);
-                        turn.incrementPoints();
-                        return win;
-                    }
-                }
-            }
-        }
+    private boolean checkHorizontalWin(int i, int j) {
+        return this.grid[i][j].getValue() == TileValue.S && this.grid[i][j + 1].getValue() == TileValue.O
+                && this.grid[i][j + 2].getValue() == TileValue.S;
+    }
 
-        // Vertical Win
-        // TODO refactor as iterators
-        for (int i = 0; i < getBoardSize() - 2; i++) {
-            for (int j = 0; j < getBoardSize(); j++) {
-                if (this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j].getValue() == TileValue.O
-                        && this.grid[i + 2][j].getValue() == TileValue.S) {
-                    Triplet win = new Triplet(new Pair(i, j), new Pair(i + 1, j), new Pair(i + 2, j));
-                    if (!this.wins.contains(win)) {
-                        this.wins.add(win);
-                        turn.incrementPoints();
-                        return win;
-                    }
-                }
-            }
-        }
+    private boolean checkDiagonalWin(int i, int j) {
+        return this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j + 1].getValue() == TileValue.O
+                && this.grid[i + 2][j + 2].getValue() == TileValue.S;
+    }
 
-        // Diagonal Win
-        // TODO refactor as iterators
-        for (int i = 0; i < getBoardSize() - 2; i++) {
-            for (int j = 0; j < getBoardSize() - 2; j++) {
-                if (this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j + 1].getValue() == TileValue.O
-                        && this.grid[i + 2][j + 2].getValue() == TileValue.S) {
-                    Triplet win = new Triplet(new Pair(i, j), new Pair(i + 1, j + 1), new Pair(i + 2, j + 2));
-                    if (!this.wins.contains(win)) {
-                        this.wins.add(win);
-                        turn.incrementPoints();
-                        return win;
+    private boolean checkBackwardsDiagonalWin(int i, int j) {
+        return this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j - 1].getValue() == TileValue.O
+                && this.grid[i + 2][j - 2].getValue() == TileValue.S;
+    }
+
+    private boolean checkVerticalWin(int i, int j) {
+        return this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j].getValue() == TileValue.O
+                && this.grid[i + 2][j].getValue() == TileValue.S;
+    }
+
+    private void registerWin() {
+        for (int row = 0; row < getBoardSize(); row++) {
+            for (int col = 0; col < getBoardSize(); col++) {
+                if (col >= 2 && row < getBoardSize() - 2) {
+                    // Check backward diagonal win
+                    if (checkBackwardsDiagonalWin(row, col)) {
+                        Triplet win = new Triplet(new Pair(row, col), new Pair(row + 1, col - 1), new Pair(row + 2, col - 2));
+                        addWin(win);
+                    }
+                } if (col < getBoardSize() - 2 && row < getBoardSize() - 2) {
+                    // Check forward diagonal win
+                    if (checkDiagonalWin(row, col)) {
+                        Triplet win = new Triplet(new Pair(row, col), new Pair(row + 1, col + 1), new Pair(row + 2, col + 2));
+                        addWin(win);
+                    }
+                } if (col < getBoardSize() - 2) {
+                    // Check horizontal win
+                    if (checkHorizontalWin(row, col)) {
+                        Triplet win = new Triplet(new Pair(row, col), new Pair(row, col + 1), new Pair(row, col + 2));
+                        addWin(win);
+                    }
+                } if (row < getBoardSize() - 2) {
+                    // Check vertical win
+                    if (checkVerticalWin(row, col)) {
+                        Triplet win = new Triplet(new Pair(row, col), new Pair(row + 1, col), new Pair(row + 2, col));
+                        addWin(win);
                     }
                 }
             }
         }
-        // Backwards Diagonal Win
-        // TODO refactor as iterators
-        for (int i = 0; i < getBoardSize() - 2; i++) {
-            for (int j = 2; j < getBoardSize(); j++) {
-                if (this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j - 1].getValue() == TileValue.O
-                        && this.grid[i + 2][j - 2].getValue() == TileValue.S) {
-                    Triplet win = new Triplet(new Pair(i, j), new Pair(i + 1, j - 1), new Pair(i + 2, j - 2));
-//                    System.out.println(String.format("%s", win));
-                    if (!this.wins.contains(win)) {
-                        this.wins.add(win);
-                        turn.incrementPoints();
-                        return win;
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     private boolean hasWonGeneral() {
@@ -281,5 +255,9 @@ public class Board {
 
     private boolean hasDrawGeneral() {
         return playerOne.getPoints().equals(playerTwo.getPoints());
+    }
+
+    private boolean hasWonSimple() {
+        return playerOne.getPoints() == 1 || playerTwo.getPoints() == 1;
     }
 }
