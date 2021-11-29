@@ -6,12 +6,12 @@ import javax.swing.*;
 
 public class GUI extends JFrame {
 
-    public static final int CELL_SIZE = 100;
-    public static final int GRID_WIDTH = 8;
-    public static final int GRID_WIDTH_HALF = GRID_WIDTH / 2;
+    private static final int CELL_SIZE = 100;
+    private static final int GRID_WIDTH = 8;
+    private static final int GRID_WIDTH_HALF = GRID_WIDTH / 2;
 
-    public static final int CELL_PADDING = CELL_SIZE / 6;
-    public static final int SYMBOL_STROKE_WIDTH = 2;
+    private static final int CELL_PADDING = CELL_SIZE / 6;
+    private static final int SYMBOL_STROKE_WIDTH = 2;
 
     private int CANVAS_WIDTH;
     private int CANVAS_HEIGHT;
@@ -220,11 +220,9 @@ public class GUI extends JFrame {
                     int y1 = row * CELL_SIZE + CELL_PADDING;
                     if (board.getTile(row, col).getValue() == Tile.TileValue.S) {
                         g2d.setColor(Color.RED);
-                        // TODO: eliminate magic numbers
                         g2d.drawString("S", x1 + 5, y1 + 70);
                     } else if (board.getTile(row, col).getValue() == Tile.TileValue.O) {
                         g2d.setColor(Color.BLUE);
-                        // TODO: eliminate magic numbers
                         g2d.drawString("O", x1 - 2, y1 + 70);
                     }
                 }
@@ -236,7 +234,7 @@ public class GUI extends JFrame {
                 case PLAYING:
                 case INIT: {
                     gameStatusBar.setForeground(Color.BLACK);
-                    gameStatusBar.setText(String.format("%s's Turn", board.getTurn().getName()));
+                    gameStatusBar.setText(String.format("%s's Turn (%s points)", board.getTurn().getName(), board.getTurn().getPoints()));
                     break;
                 }
                 case DRAW: {

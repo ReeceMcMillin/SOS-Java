@@ -275,4 +275,22 @@ public class TestBoardGUI {
             e.printStackTrace();
         }
     }
+
+    @Test
+    public void testTwoComputers() {
+        board = new Board(9);
+        GUI gui = new GUI(board);
+        gui.getBoard().playerOne.setStyle(Player.PlayStyle.Computer);
+        gui.getBoard().playerTwo.setStyle(Player.PlayStyle.Computer);
+
+        gui.getBoard().makeComputerMove();
+
+        try {
+            Thread.sleep(sleepTime);
+            gui.dispose();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        assert(gui.getBoard().isFull());
+    }
 }

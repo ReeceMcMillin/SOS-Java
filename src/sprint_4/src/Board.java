@@ -3,8 +3,6 @@ package sprint_4.src;
 import java.util.TreeSet;
 
 import sprint_4.src.Tile.TileValue;
-import sprint_4.src.Pair;
-import sprint_4.src.Triplet;
 import java.util.Random;
 import java.util.ArrayList;
 
@@ -29,19 +27,19 @@ public class Board {
 
     public final int MIN_BOARD_SIZE = 3;
     public final int MAX_BOARD_SIZE = 9;
-    private static int BOARD_SIZE = 3;
+    private int boardSize = MIN_BOARD_SIZE;
 
     private State gameState;
 
     public Board() {
-        grid = new Tile[BOARD_SIZE][BOARD_SIZE];
+        grid = new Tile[MIN_BOARD_SIZE][MIN_BOARD_SIZE];
         initBoard();
     }
 
     public Board(int boardSize) {
-        grid = new Tile[BOARD_SIZE][BOARD_SIZE];
+        setBoardSize(boardSize);
+        grid = new Tile[getBoardSize()][getBoardSize()];
         initBoard();
-        BOARD_SIZE = boardSize;
     }
 
     public void setGrid(Tile[][] grid) {
@@ -55,31 +53,27 @@ public class Board {
         turn = playerOne;
         this.wins = new TreeSet<>();
 
-        for (int row = 0; row < BOARD_SIZE; row++) {
-            for (int col = 0; col < BOARD_SIZE; col++) {
+        for (int row = 0; row < getBoardSize(); row++) {
+            for (int col = 0; col < getBoardSize(); col++) {
                 grid[row][col] = new Tile(TileValue.None);
             }
         }
     }
 
     public void setBoardSize(int boardSize) {
-        BOARD_SIZE = boardSize;
+        this.boardSize = boardSize;
     }
 
     public int getBoardSize() {
-        return BOARD_SIZE;
-    }
-
-    public State getGameState() {
-        return this.gameState;
+        return this.boardSize;
     }
 
     public void setGameState(State state) {
         this.gameState = state;
     }
 
-    public GameMode getGameMode() {
-        return this.gameMode;
+    public State getGameState() {
+        return this.gameState;
     }
 
     public void setGameMode(GameMode mode) {
@@ -93,6 +87,15 @@ public class Board {
         this.gameMode = mode;
     }
 
+    public GameMode getGameMode() {
+        return this.gameMode;
+    }
+
+    /**
+     * @param row The row index.
+     * @param column The column index.
+     * @return The tile at the given (row, column) index.
+     */
     public Tile getTile(int row, int column) {
         assert (row >= 0 && row < this.getBoardSize() &&
                 column >= 0 && column < this.getBoardSize()) :
@@ -101,6 +104,9 @@ public class Board {
         return grid[row][column];
     }
 
+    /**
+     * @return ArrayList<Pair> of all empty tile locations on board.
+     */
     public ArrayList<Pair> getEmptyTiles() {
         ArrayList<Pair> emptyTiles = new ArrayList<>();
         for (int i = 0; i < this.getBoardSize(); i++) {
@@ -113,6 +119,9 @@ public class Board {
         return emptyTiles;
     }
 
+    /**
+     * @return The board's active player.
+     */
     public Player getTurn() {
         return turn;
     }
@@ -121,15 +130,20 @@ public class Board {
         return this.getGameState() == State.PLAYER_ONE_WON || this.getGameState() == State.PLAYER_TWO_WON;
     }
 
+    /**
+     * Places a tile from the active player at the given (row, column) index.
+     * @param row The row index of the tile to be placed.
+     * @param column The column index of the tile to be placed.
+     */
     public void makeMove(int row, int column) {
         assert (0 <= row && row < this.getBoardSize() &&
                 0 <= column && column < this.getBoardSize())
                 : String.format("makeMove(%s, %s) out of bounds for board size %s.", row, column, this.getBoardSize());
 
         if (grid[row][column].getValue() == TileValue.None) {
-            grid[row][column] = (turn == playerOne) ? playerOne.getTile() : playerTwo.getTile();
-            updateGameState(turn);
-            turn = (turn == playerOne) ? playerTwo : playerOne;
+            grid[row][column] = (this.turn == playerOne) ? playerOne.getTile() : playerTwo.getTile();
+            updateGameState();
+            this.turn = (this.turn == playerOne) ? playerTwo : playerOne;
         }
         if (this.boardHasWinner()) return;
 
@@ -139,6 +153,10 @@ public class Board {
         }
     }
 
+    /**
+     * Places a tile in a random location on behalf of an active player who has selected the Computer play style.
+     * @see sprint_4.src.Player.PlayStyle
+     */
     public void makeComputerMove() {
         if (this.boardHasWinner()) return;
 
@@ -147,7 +165,7 @@ public class Board {
         Tile tile = new Tile(TileValue.values()[RANDOM.nextInt(2)]);
 
         grid[choice.first][choice.second] = tile;
-        updateGameState(turn);
+        updateGameState();
 
         if (emptyTiles.size() <= 1) return;
 
@@ -157,7 +175,10 @@ public class Board {
         }
     }
 
-    private boolean isFull() {
+    /**
+     * @return True if the board is full, false otherwise.
+     */
+    public boolean isFull() {
         for (int i = 0; i < this.getBoardSize(); i++) {
             for (int j = 0; j < this.getBoardSize(); j++) {
                 if (this.grid[i][j].getValue() == Tile.TileValue.None) {
@@ -168,12 +189,15 @@ public class Board {
         return true;
     }
 
-    private void updateGameState(Player turn) {
+    /**
+     * Given the selected game mode, register any newly completed wins update the game state accordingly.
+     */
+    private void updateGameState() {
         registerWin();
         switch (this.getGameMode()) {
             case Simple:
                 if (hasWonSimple()) {
-                    this.setGameState(turn == playerOne ? State.PLAYER_ONE_WON : State.PLAYER_TWO_WON);
+                    this.setGameState(this.turn == playerOne ? State.PLAYER_ONE_WON : State.PLAYER_TWO_WON);
                 } else {
                     this.setGameState(this.isFull() ? State.DRAW : State.PLAYING);
                 }

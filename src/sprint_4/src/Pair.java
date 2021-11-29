@@ -2,7 +2,7 @@ package sprint_4.src;
 
 /**
  * Holds a coordinate pair.
- * @see sprint_4.src.Triplet
+ * @see Triplet
  */
 public class Pair implements Comparable<Pair> {
     public final int first;

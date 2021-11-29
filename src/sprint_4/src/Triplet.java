@@ -1,5 +1,4 @@
 package sprint_4.src;
-import sprint_4.src.Pair;
 
 /**
  * Triplet contains a triplet of Pairs, meant to represent a 3-tuple of Tiles on the board.
