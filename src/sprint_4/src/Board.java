@@ -1,13 +1,13 @@
 package sprint_4.src;
 
 import java.util.TreeSet;
-
 import sprint_4.src.Tile.TileValue;
 import java.util.Random;
 import java.util.ArrayList;
 
 public class Board {
     private static final Random RANDOM = new Random();
+
     public enum State {
         INIT, PLAYING, DRAW, PLAYER_ONE_WON, PLAYER_TWO_WON
     }
@@ -31,16 +31,23 @@ public class Board {
 
     private State gameState;
 
+    public boolean recordGame = false;
+    public GameWriter writer;
+
     public Board() {
         grid = new Tile[MIN_BOARD_SIZE][MIN_BOARD_SIZE];
+        this.writer = new GameWriter();
         initBoard();
     }
 
     public Board(int boardSize) {
         setBoardSize(boardSize);
         grid = new Tile[getBoardSize()][getBoardSize()];
+        this.writer = new GameWriter();
         initBoard();
     }
+
+    public void toggleRecording() { this.recordGame = !this.recordGame; }
 
     public void setGrid(Tile[][] grid) {
         this.grid = grid;
@@ -52,12 +59,16 @@ public class Board {
         gameState = State.INIT;
         turn = playerOne;
         this.wins = new TreeSet<>();
+        this.writer.clearBuffer();
 
         for (int row = 0; row < getBoardSize(); row++) {
             for (int col = 0; col < getBoardSize(); col++) {
                 grid[row][col] = new Tile(TileValue.None);
             }
         }
+
+        this.writer = new GameWriter();
+        this.writer.writeMessage(String.format("Board has been initialized at size %s.\n", this.getBoardSize()));
     }
 
     public void setBoardSize(int boardSize) {
@@ -85,6 +96,7 @@ public class Board {
             }
         }
         this.gameMode = mode;
+        this.writer.writeMessage(String.format("Game mode has been switched to %s.\n", this.gameMode));
     }
 
     public GameMode getGameMode() {
@@ -142,6 +154,9 @@ public class Board {
 
         if (grid[row][column].getValue() == TileValue.None) {
             grid[row][column] = (this.turn == playerOne) ? playerOne.getTile() : playerTwo.getTile();
+
+            if (this.recordGame) this.writer.writeMove(row, column, turn);
+
             updateGameState();
             this.turn = (this.turn == playerOne) ? playerTwo : playerOne;
         }
@@ -165,6 +180,8 @@ public class Board {
         Tile tile = new Tile(TileValue.values()[RANDOM.nextInt(2)]);
 
         grid[choice.first][choice.second] = tile;
+        turn.setTile(tile.getValue());
+        if (this.recordGame) this.writer.writeMove(choice.first, choice.second, turn);
         updateGameState();
 
         if (emptyTiles.size() <= 1) return;
@@ -198,6 +215,9 @@ public class Board {
             case Simple:
                 if (hasWonSimple()) {
                     this.setGameState(this.turn == playerOne ? State.PLAYER_ONE_WON : State.PLAYER_TWO_WON);
+                    Player playerWon = this.gameState == State.PLAYER_ONE_WON ? this.playerOne : this.playerTwo;
+                    this.writer.writeMessage(String.format("%s has won!\n", playerWon.getName()));
+                    if (this.recordGame) this.writer.writeToFile();
                 } else {
                     this.setGameState(this.isFull() ? State.DRAW : State.PLAYING);
                 }
@@ -206,8 +226,16 @@ public class Board {
                 if (this.isFull()) {
                     if (hasWonGeneral()) {
                         this.setGameState(playerOne.getPoints() > playerTwo.getPoints() ? State.PLAYER_ONE_WON : State.PLAYER_TWO_WON);
+                        Player playerWon = this.gameState == State.PLAYER_ONE_WON ? this.playerOne : this.playerTwo;
+                        Player playerLost = playerWon == playerOne ? playerTwo : playerOne;
+                        this.writer.writeMessage(
+                                String.format("%s has won with %s points! %s finished with %s points.\n",
+                                playerWon.getName(), playerWon.getPoints(), playerLost.getName(), playerLost.getPoints())
+                        );
+                        if (this.recordGame) this.writer.writeToFile();
                     } else if (hasDrawGeneral()) {
                         this.setGameState(State.DRAW);
+                        if (this.recordGame) this.writer.writeToFile();
                     }
                 }
             }
@@ -274,14 +302,17 @@ public class Board {
     }
 
     private boolean hasWonGeneral() {
+        {}
         return !playerOne.getPoints().equals(playerTwo.getPoints());
     }
 
     private boolean hasDrawGeneral() {
+        {}
         return playerOne.getPoints().equals(playerTwo.getPoints());
     }
 
     private boolean hasWonSimple() {
+        {}
         return playerOne.getPoints() == 1 || playerTwo.getPoints() == 1;
     }
 }

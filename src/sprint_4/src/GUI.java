@@ -1,8 +1,11 @@
 package sprint_4.src;
 
-import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.FileNotFoundException;
 
 public class GUI extends JFrame {
 
@@ -19,7 +22,7 @@ public class GUI extends JFrame {
     private GameBoardCanvas gameBoardCanvas;
     private JLabel gameStatusBar;
 
-    private final Board board;
+    private Board board;
 
     public GUI(Board board) {
         this.board = board;
@@ -44,7 +47,7 @@ public class GUI extends JFrame {
         gameStatusBar.setFont(new Font(Font.DIALOG_INPUT, Font.BOLD, 15));
         gameStatusBar.setBorder(BorderFactory.createEmptyBorder(2, 5, 4, 5));
 
-        JPanel topMenu = GenerateGameMenu(this.board);
+        JPanel topMenu = GenerateGameMenu();
         JPanel leftMenu = GenerateTileMenu(this.board.playerOne);
         JPanel rightMenu = GenerateTileMenu(this.board.playerTwo);
 
@@ -59,60 +62,93 @@ public class GUI extends JFrame {
         contentPane.add(gameStatusBar, BorderLayout.AFTER_LAST_LINE);
     }
 
-    public JPanel GenerateGameMenu(Board board) {
+    private void ResetGame() {
+        this.board.initBoard();
+        setContentPane();
+        pack();
+        this.gameBoardCanvas.repaint();
+        this.gameBoardCanvas.printStatusBar();
+    }
+
+    private void ReplayGame() throws AWTException {
+        int delayTimeMs = 20;
+        JFileChooser fileChooser = new JFileChooser(System.getProperty("user.dir"));
+        fileChooser.showOpenDialog(new JFrame("Open File"));
+        GameReader reader = new GameReader(fileChooser.getSelectedFile());
+
+        System.out.println(reader.boardSize);
+        this.board = new Board(reader.boardSize);
+        if (reader.gameMode != null) board.setGameMode(reader.gameMode);
+        ResetGame();
+
+        Robot robot = new Robot();
+        robot.setAutoDelay(delayTimeMs);
+
+        Thread safe = new Thread(() -> {
+            for (GameReader.Move move : reader.moves) {
+                robot.mouseMove(220 + (move.column * CELL_SIZE), 200 + (move.row * CELL_SIZE));
+                if (move.tile.equals("S")) this.board.getTurn().setTile(Tile.TileValue.S);
+                if (move.tile.equals("O")) this.board.getTurn().setTile(Tile.TileValue.O);
+                robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
+                robot.waitForIdle();
+                robot.delay(delayTimeMs);
+
+                robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
+                robot.waitForIdle();
+                robot.delay(delayTimeMs);
+//            }
+            }
+        });
+        safe.start();
+    }
+
+    public JPanel GenerateGameMenu() {
         JPanel menu = new JPanel();
         menu.setPreferredSize(new Dimension(CANVAS_WIDTH + 200, 100));
 
         JPanel boardSizeMenu = new JPanel();
-        boardSizeMenu.setPreferredSize(new Dimension(CANVAS_WIDTH + 200, 25));
+        boardSizeMenu.setPreferredSize(new Dimension(CANVAS_WIDTH + 200, 20));
 
         ButtonGroup gameModeSelection = new ButtonGroup();
-        menu.setLayout(new FlowLayout());
-        JRadioButton simpleGame = new JRadioButton("Simple Game");
-        JRadioButton generalGame = new JRadioButton("General Game");
+        menu.setLayout(new BorderLayout());
+        JRadioButton simpleGame = new JRadioButton("Simple");
+        JRadioButton generalGame = new JRadioButton("General");
         JButton newGame = new JButton("New Game");
+        JButton replayGame = new JButton("Replay Game");
         JButton incButton = new JButton("+");
         JButton decButton = new JButton("-");
+        JCheckBox recordGame = new JCheckBox("Record");
 
-        newGame.addActionListener(e -> {
-            board.playerOne.resetPoints();
-            board.playerTwo.resetPoints();
-            gameStatusBar.setText("");
-            board.initBoard();
-            gameStatusBar.setText("");
-            gameBoardCanvas.repaint();
-        });
+        newGame.addActionListener(e -> ResetGame());
 
         simpleGame.setSelected(this.board.getGameMode() == Board.GameMode.Simple);
         generalGame.setSelected(this.board.getGameMode() == Board.GameMode.General);
+        recordGame.setSelected(this.board.recordGame);
 
         simpleGame.addActionListener(e -> board.setGameMode(Board.GameMode.Simple));
         generalGame.addActionListener(e -> board.setGameMode(Board.GameMode.General));
+        recordGame.addActionListener(e -> board.toggleRecording());
+        replayGame.addActionListener(e -> {
+            ResetGame();
+            try {
+                ReplayGame();
+            } catch (AWTException ex) {
+                ex.printStackTrace();
+            }
+        });
 
         incButton.addActionListener(e -> {
-            if (board.getBoardSize() >= board.MAX_BOARD_SIZE) {
-                return;
-            }
+            if (this.board.getBoardSize() >= this.board.MAX_BOARD_SIZE) { return; }
             board.setGrid(new Tile[board.getBoardSize() + 1][board.getBoardSize() + 1]);
             board.setBoardSize(board.getBoardSize() + 1);
-            board.initBoard();
-            setContentPane();
-            pack();
-            gameBoardCanvas.repaint();
-            gameBoardCanvas.printStatusBar();
+            ResetGame();
         });
 
         decButton.addActionListener(e -> {
-            if (board.getBoardSize() <= board.MIN_BOARD_SIZE) {
-                return;
-            }
+            if (board.getBoardSize() <= board.MIN_BOARD_SIZE) { return; }
             board.setGrid(new Tile[board.getBoardSize() - 1][board.getBoardSize() - 1]);
             board.setBoardSize(board.getBoardSize() - 1);
-            board.initBoard();
-            setContentPane();
-            pack();
-            gameBoardCanvas.repaint();
-            gameBoardCanvas.printStatusBar();
+            ResetGame();
         });
 
         menu.setLayout(new BorderLayout());
@@ -125,10 +161,17 @@ public class GUI extends JFrame {
         boardSizeMenu.add(incButton, BorderLayout.EAST);
         gameModeSelection.add(simpleGame);
         gameModeSelection.add(generalGame);
+
+        JPanel gameStartMenu = new JPanel();
+        gameStartMenu.setLayout(new BorderLayout());
+        gameStartMenu.add(newGame, BorderLayout.WEST);
+        gameStartMenu.add(replayGame, BorderLayout.EAST);
+
         menu.add(boardSizeMenu, BorderLayout.PAGE_START);
         menu.add(simpleGame, BorderLayout.WEST);
+        menu.add(recordGame, BorderLayout.CENTER);
         menu.add(generalGame, BorderLayout.EAST);
-        menu.add(newGame, BorderLayout.SOUTH);
+        menu.add(gameStartMenu, BorderLayout.PAGE_END);
         return menu;
     }
 
@@ -179,12 +222,14 @@ public class GUI extends JFrame {
                         int rowSelected = e.getY() / CELL_SIZE;
                         int colSelected = e.getX() / CELL_SIZE;
                         board.makeMove(rowSelected, colSelected);
+                        repaint();
                     } else {
                         gameStatusBar.setText("");
                         board.initBoard();
                     }
                     repaint();
                 }
+                public void mouseReleased(MouseEvent e) {}
             });
         }
 
