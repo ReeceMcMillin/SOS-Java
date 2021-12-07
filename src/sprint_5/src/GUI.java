@@ -121,7 +121,12 @@ public class GUI extends JFrame {
         JButton decButton = new JButton("-");
         JCheckBox recordGame = new JCheckBox("Record");
 
-        newGame.addActionListener(e -> ResetGame());
+        newGame.addActionListener(e -> {
+            ResetGame();
+            simpleGame.setSelected(this.board.getGameMode() == Board.GameMode.Simple);
+            generalGame.setSelected(this.board.getGameMode() == Board.GameMode.General);
+            recordGame.setSelected(this.board.recordGame);
+        });
 
         simpleGame.setSelected(this.board.getGameMode() == Board.GameMode.Simple);
         generalGame.setSelected(this.board.getGameMode() == Board.GameMode.General);

@@ -45,10 +45,10 @@ public class Board {
     public void initBoard() {
         this.playerOne.resetPoints();
         this.playerTwo.resetPoints();
+        this.recordGame = false;
         gameState = State.INIT;
         turn = playerOne;
         this.wins = new TreeSet<>();
-        this.writer.clearBuffer();
 
         for (int row = 0; row < getBoardSize(); row++) {
             for (int col = 0; col < getBoardSize(); col++) {
@@ -56,6 +56,7 @@ public class Board {
             }
         }
 
+        this.writer.clearBuffer();
         this.writer = new GameWriter();
         this.writer.writeMessage(String.format("Board has been initialized at size %s.\n", this.getBoardSize()));
     }

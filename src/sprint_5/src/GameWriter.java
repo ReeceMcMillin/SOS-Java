@@ -33,9 +33,6 @@ public class GameWriter {
     public void writeToFile() {
         try {
             File path = new File(String.format("%s/recorded/", System.getProperty("user.dir")));
-            if (!path.mkdir()) {
-                return;
-            }
             File file = new File(path + "/" + filename);
             this.writer = new FileWriter(file);
             this.writer.write(String.valueOf(this.buffer));
