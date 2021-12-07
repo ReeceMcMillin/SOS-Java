@@ -13,15 +13,10 @@ public class GameReader {
     ArrayList<Move> moves;
     int boardSize;
     Board.GameMode gameMode;
-    public GameReader(File file) {
-        Scanner reader = null;
-        try {
-            reader = new Scanner(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
+    public GameReader(File file) throws FileNotFoundException {
+        assert(file.getName().contains(".sos"));
+        Scanner reader = new Scanner(file);
 
-        assert reader != null;
         StringBuilder contents = new StringBuilder();
 
         while (reader.hasNextLine()) {

@@ -14,7 +14,7 @@ public class GameWriter {
     public GameWriter() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
-        this.filename = String.format("SOS-%s.txt", dtf.format(now));
+        this.filename = String.format("%s.sos", dtf.format(now));
         this.buffer = new StringBuilder();
     }
 

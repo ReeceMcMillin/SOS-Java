@@ -8,18 +8,18 @@ import java.util.TreeSet;
 
 public class Board {
     private static final Random RANDOM = new Random();
+    public static final int MIN_BOARD_SIZE = 3;
+    public static final int MAX_BOARD_SIZE = 9;
+
+    private int boardSize = MIN_BOARD_SIZE;
     public final Player playerOne = new Player(TileValue.S, "Player 1");
     public final Player playerTwo = new Player(TileValue.O, "Player 2");
-    public final int MIN_BOARD_SIZE = 3;
-    public final int MAX_BOARD_SIZE = 9;
     public boolean recordGame = false;
-    public GameWriter writer;
+    private GameWriter writer;
     private GameMode gameMode = GameMode.General;
     private Tile[][] grid;
     private TreeSet<Triplet> wins;
     private Player turn = playerOne;
-    private int boardSize = MIN_BOARD_SIZE;
-
     private State gameState;
 
     public Board() {
@@ -27,6 +27,7 @@ public class Board {
         this.writer = new GameWriter();
         initBoard();
     }
+
     public Board(int boardSize) {
         setBoardSize(boardSize);
         grid = new Tile[getBoardSize()][getBoardSize()];
@@ -39,7 +40,9 @@ public class Board {
     }
 
     public void setGrid(Tile[][] grid) {
+        assert (grid.length >= MIN_BOARD_SIZE && grid.length <= MAX_BOARD_SIZE);
         this.grid = grid;
+        this.setBoardSize(grid.length);
     }
 
     public void initBoard() {
@@ -66,6 +69,7 @@ public class Board {
     }
 
     public void setBoardSize(int boardSize) {
+        assert (boardSize >= MIN_BOARD_SIZE && boardSize <= MAX_BOARD_SIZE);
         this.boardSize = boardSize;
     }
 
@@ -82,6 +86,7 @@ public class Board {
     }
 
     public void setGameMode(GameMode mode) {
+        // The game mode should not be changed if any tiles have been set.
         for (Tile[] row : grid) {
             for (Tile tile : row) {
                 if (tile.getValue() != TileValue.None) {
@@ -151,7 +156,9 @@ public class Board {
             updateGameState();
             this.turn = (this.turn == playerOne) ? playerTwo : playerOne;
         }
-        if (this.boardHasWinner()) return;
+        if (this.boardHasWinner()) {
+            return;
+        }
 
         if (turn.getStyle() == Player.PlayStyle.Computer
                 && !isFull()) {
@@ -165,7 +172,9 @@ public class Board {
      * @see sprint_5.src.Player.PlayStyle
      */
     public void makeComputerMove() {
-        if (this.boardHasWinner()) return;
+        if (this.boardHasWinner()) {
+            return;
+        }
 
         ArrayList<Pair> emptyTiles = getEmptyTiles();
         Pair choice = emptyTiles.get(RANDOM.nextInt(emptyTiles.size()));
@@ -176,7 +185,9 @@ public class Board {
         if (this.recordGame) this.writer.writeMove(choice.first, choice.second, turn);
         updateGameState();
 
-        if (emptyTiles.size() <= 1) return;
+        if (emptyTiles.size() <= 1) {
+            return;
+        }
 
         turn = (turn == playerOne) ? playerTwo : playerOne;
         if (turn.getStyle() == Player.PlayStyle.Computer) {
@@ -242,21 +253,25 @@ public class Board {
     }
 
     private boolean checkHorizontalWin(int i, int j) {
+        assert (i <= this.getBoardSize() && j <= this.getBoardSize() - 2);
         return this.grid[i][j].getValue() == TileValue.S && this.grid[i][j + 1].getValue() == TileValue.O
                 && this.grid[i][j + 2].getValue() == TileValue.S;
     }
 
     private boolean checkDiagonalWin(int i, int j) {
+        assert (i <= this.getBoardSize() - 2 && j <= this.getBoardSize() - 2);
         return this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j + 1].getValue() == TileValue.O
                 && this.grid[i + 2][j + 2].getValue() == TileValue.S;
     }
 
     private boolean checkBackwardsDiagonalWin(int i, int j) {
+        assert (i <= this.getBoardSize() - 2 && j >= 2 && j <= this.getBoardSize());
         return this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j - 1].getValue() == TileValue.O
                 && this.grid[i + 2][j - 2].getValue() == TileValue.S;
     }
 
     private boolean checkVerticalWin(int i, int j) {
+        assert (i <= this.getBoardSize() - 2 && j <= this.getBoardSize());
         return this.grid[i][j].getValue() == TileValue.S && this.grid[i + 1][j].getValue() == TileValue.O
                 && this.grid[i + 2][j].getValue() == TileValue.S;
     }
@@ -265,28 +280,24 @@ public class Board {
         for (int row = 0; row < getBoardSize(); row++) {
             for (int col = 0; col < getBoardSize(); col++) {
                 if (col >= 2 && row < getBoardSize() - 2) {
-                    // Check backward diagonal win
                     if (checkBackwardsDiagonalWin(row, col)) {
                         Triplet win = new Triplet(new Pair(row, col), new Pair(row + 1, col - 1), new Pair(row + 2, col - 2));
                         addWin(win);
                     }
                 }
                 if (col < getBoardSize() - 2 && row < getBoardSize() - 2) {
-                    // Check forward diagonal win
                     if (checkDiagonalWin(row, col)) {
                         Triplet win = new Triplet(new Pair(row, col), new Pair(row + 1, col + 1), new Pair(row + 2, col + 2));
                         addWin(win);
                     }
                 }
                 if (col < getBoardSize() - 2) {
-                    // Check horizontal win
                     if (checkHorizontalWin(row, col)) {
                         Triplet win = new Triplet(new Pair(row, col), new Pair(row, col + 1), new Pair(row, col + 2));
                         addWin(win);
                     }
                 }
                 if (row < getBoardSize() - 2) {
-                    // Check vertical win
                     if (checkVerticalWin(row, col)) {
                         Triplet win = new Triplet(new Pair(row, col), new Pair(row + 1, col), new Pair(row + 2, col));
                         addWin(win);
@@ -297,20 +308,14 @@ public class Board {
     }
 
     private boolean hasWonGeneral() {
-        {
-        }
         return !playerOne.getPoints().equals(playerTwo.getPoints());
     }
 
     private boolean hasDrawGeneral() {
-        {
-        }
         return playerOne.getPoints().equals(playerTwo.getPoints());
     }
 
     private boolean hasWonSimple() {
-        {
-        }
         return playerOne.getPoints() == 1 || playerTwo.getPoints() == 1;
     }
 

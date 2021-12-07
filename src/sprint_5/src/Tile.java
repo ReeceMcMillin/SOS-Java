@@ -17,16 +17,9 @@ public class Tile implements Comparable<Tile> {
 
     public String toString() {
         switch (this.value) {
-            case S: {
-                return "S";
-            }
-            case O: {
-                return "O";
-            }
-            default: {
-                return "";
-            }
-
+            case S: return "S";
+            case O: return "O";
+            default: return "None";
         }
     }
 

@@ -1,8 +1,5 @@
 package sprint_5.src;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-
 /**
  * Holds a coordinate pair.
  *
@@ -15,12 +12,6 @@ public class Pair implements Comparable<Pair> {
     public Pair(int first, int second) {
         this.first = first;
         this.second = second;
-    }
-
-    public Pair(String s) {
-        ArrayList<String> split = new ArrayList<>(Arrays.asList(s.split(",")));
-        this.first = Integer.parseInt(split.get(0));
-        this.second = Integer.parseInt(split.get(1));
     }
 
     public String toString() {

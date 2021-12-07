@@ -5,12 +5,15 @@ import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 public class GUI extends JFrame {
 
     private static final int CELL_SIZE = 100;
     private static final int GRID_WIDTH = 8;
     private static final int GRID_WIDTH_HALF = GRID_WIDTH / 2;
+    private static final int WIDTH_OFFSET = 200;
 
     private static final int CELL_PADDING = CELL_SIZE / 6;
     private static final int SYMBOL_STROKE_WIDTH = 2;
@@ -50,9 +53,9 @@ public class GUI extends JFrame {
         gameStatusBar.setFont(new Font(Font.DIALOG_INPUT, Font.BOLD, 15));
         gameStatusBar.setBorder(BorderFactory.createEmptyBorder(2, 5, 4, 5));
 
-        JPanel topMenu = GenerateGameMenu();
-        JPanel leftMenu = GenerateTileMenu(this.board.playerOne);
-        JPanel rightMenu = GenerateTileMenu(this.board.playerTwo);
+        JPanel topMenu = generateGameMenu();
+        JPanel leftMenu = generateTileMenu(this.board.playerOne);
+        JPanel rightMenu = generateTileMenu(this.board.playerTwo);
 
         Container contentPane = getContentPane();
         contentPane.setLayout(new BorderLayout());
@@ -65,7 +68,7 @@ public class GUI extends JFrame {
         contentPane.add(gameStatusBar, BorderLayout.AFTER_LAST_LINE);
     }
 
-    private void ResetGame() {
+    private void resetGame() {
         this.board.initBoard();
         setContentPane();
         pack();
@@ -73,24 +76,43 @@ public class GUI extends JFrame {
         this.gameBoardCanvas.printStatusBar();
     }
 
-    private void ReplayGame() throws AWTException {
+    private void replayGame() throws AWTException {
+        GameReader reader;
         int delayTimeMs = 20;
-        JFileChooser fileChooser = new JFileChooser(System.getProperty("user.dir"));
-        fileChooser.showOpenDialog(new JFrame("Open File"));
-        GameReader reader = new GameReader(fileChooser.getSelectedFile());
+        JFileChooser fileChooser = new JFileChooser(System.getProperty("user.dir") + "/recorded");
+        int dialog = fileChooser.showOpenDialog(new JFrame("Open File"));
+        if (dialog == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            if (file.getName().contains(".sos")) {
+                try {
+                    reader = new GameReader(file);
+                } catch (FileNotFoundException e) {
+                    System.out.println("Error: File not found.");
+                    return;
+                }
+            } else {
+                return;
+            }
+        } else {
+            return;
+        }
 
         this.board = new Board(reader.boardSize);
         if (reader.gameMode != null) board.setGameMode(reader.gameMode);
-        ResetGame();
+        resetGame();
 
         Robot robot = new Robot();
         robot.setAutoDelay(delayTimeMs);
 
         Thread safe = new Thread(() -> {
             for (GameReader.Move move : reader.moves) {
-                robot.mouseMove(220 + (move.column * CELL_SIZE), 200 + (move.row * CELL_SIZE));
-                if (move.tile.equals("S")) this.board.getTurn().setTile(Tile.TileValue.S);
-                if (move.tile.equals("O")) this.board.getTurn().setTile(Tile.TileValue.O);
+                robot.mouseMove(220 + (move.column * CELL_SIZE), WIDTH_OFFSET + (move.row * CELL_SIZE));
+                if (move.tile.equals("S")) {
+                    this.board.getTurn().setTile(Tile.TileValue.S);
+                }
+                if (move.tile.equals("O")) {
+                    this.board.getTurn().setTile(Tile.TileValue.O);
+                }
                 robot.mousePress(InputEvent.BUTTON1_DOWN_MASK);
                 robot.waitForIdle();
                 robot.delay(delayTimeMs);
@@ -98,18 +120,17 @@ public class GUI extends JFrame {
                 robot.mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
                 robot.waitForIdle();
                 robot.delay(delayTimeMs);
-//            }
             }
         });
         safe.start();
     }
 
-    public JPanel GenerateGameMenu() {
+    public JPanel generateGameMenu() {
         JPanel menu = new JPanel();
-        menu.setPreferredSize(new Dimension(CANVAS_WIDTH + 200, 100));
+        menu.setPreferredSize(new Dimension(CANVAS_WIDTH + WIDTH_OFFSET, 100));
 
         JPanel boardSizeMenu = new JPanel();
-        boardSizeMenu.setPreferredSize(new Dimension(CANVAS_WIDTH + 200, 20));
+        boardSizeMenu.setPreferredSize(new Dimension(CANVAS_WIDTH + WIDTH_OFFSET, 20));
 
         ButtonGroup gameModeSelection = new ButtonGroup();
         menu.setLayout(new BorderLayout());
@@ -121,45 +142,45 @@ public class GUI extends JFrame {
         JButton decButton = new JButton("-");
         JCheckBox recordGame = new JCheckBox("Record");
 
-        newGame.addActionListener(e -> {
-            ResetGame();
+        Runnable resetSelected = () -> {
             simpleGame.setSelected(this.board.getGameMode() == Board.GameMode.Simple);
             generalGame.setSelected(this.board.getGameMode() == Board.GameMode.General);
             recordGame.setSelected(this.board.recordGame);
+        };
+
+        newGame.addActionListener(e -> {
+            resetGame();
+            resetSelected.run();
         });
 
-        simpleGame.setSelected(this.board.getGameMode() == Board.GameMode.Simple);
-        generalGame.setSelected(this.board.getGameMode() == Board.GameMode.General);
-        recordGame.setSelected(this.board.recordGame);
+        resetSelected.run();
 
         simpleGame.addActionListener(e -> board.setGameMode(Board.GameMode.Simple));
         generalGame.addActionListener(e -> board.setGameMode(Board.GameMode.General));
         recordGame.addActionListener(e -> board.toggleRecording());
         replayGame.addActionListener(e -> {
-            ResetGame();
+            resetGame();
             try {
-                ReplayGame();
+                replayGame();
             } catch (AWTException ex) {
                 ex.printStackTrace();
             }
         });
 
         incButton.addActionListener(e -> {
-            if (this.board.getBoardSize() >= this.board.MAX_BOARD_SIZE) {
+            if (this.board.getBoardSize() >= Board.MAX_BOARD_SIZE) {
                 return;
             }
             board.setGrid(new Tile[board.getBoardSize() + 1][board.getBoardSize() + 1]);
-            board.setBoardSize(board.getBoardSize() + 1);
-            ResetGame();
+            resetGame();
         });
 
         decButton.addActionListener(e -> {
-            if (board.getBoardSize() <= board.MIN_BOARD_SIZE) {
+            if (board.getBoardSize() <= Board.MIN_BOARD_SIZE) {
                 return;
             }
             board.setGrid(new Tile[board.getBoardSize() - 1][board.getBoardSize() - 1]);
-            board.setBoardSize(board.getBoardSize() - 1);
-            ResetGame();
+            resetGame();
         });
 
         menu.setLayout(new BorderLayout());
@@ -186,7 +207,7 @@ public class GUI extends JFrame {
         return menu;
     }
 
-    public JPanel GenerateTileMenu(Player player) {
+    public JPanel generateTileMenu(Player player) {
         JPanel menu = new JPanel();
         ButtonGroup tileSelection = new ButtonGroup();
         ButtonGroup styleSelection = new ButtonGroup();
