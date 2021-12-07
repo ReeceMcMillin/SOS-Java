@@ -1,45 +1,32 @@
-package sprint_4.src;
+package sprint_5.src;
 
-import java.util.TreeSet;
-import sprint_4.src.Tile.TileValue;
-import java.util.Random;
+import sprint_5.src.Tile.TileValue;
+
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.TreeSet;
 
 public class Board {
     private static final Random RANDOM = new Random();
-
-    public enum State {
-        INIT, PLAYING, DRAW, PLAYER_ONE_WON, PLAYER_TWO_WON
-    }
-
-    public enum GameMode {
-        Simple, General
-    }
-
+    public final Player playerOne = new Player(TileValue.S, "Player 1");
+    public final Player playerTwo = new Player(TileValue.O, "Player 2");
+    public final int MIN_BOARD_SIZE = 3;
+    public final int MAX_BOARD_SIZE = 9;
+    public boolean recordGame = false;
+    public GameWriter writer;
     private GameMode gameMode = GameMode.General;
     private Tile[][] grid;
     private TreeSet<Triplet> wins;
-
-    public final Player playerOne = new Player(TileValue.S, "Player 1");
-    public final Player playerTwo = new Player(TileValue.O, "Player 2");
-
     private Player turn = playerOne;
-
-    public final int MIN_BOARD_SIZE = 3;
-    public final int MAX_BOARD_SIZE = 9;
     private int boardSize = MIN_BOARD_SIZE;
 
     private State gameState;
-
-    public boolean recordGame = false;
-    public GameWriter writer;
 
     public Board() {
         grid = new Tile[MIN_BOARD_SIZE][MIN_BOARD_SIZE];
         this.writer = new GameWriter();
         initBoard();
     }
-
     public Board(int boardSize) {
         setBoardSize(boardSize);
         grid = new Tile[getBoardSize()][getBoardSize()];
@@ -47,7 +34,9 @@ public class Board {
         initBoard();
     }
 
-    public void toggleRecording() { this.recordGame = !this.recordGame; }
+    public void toggleRecording() {
+        this.recordGame = !this.recordGame;
+    }
 
     public void setGrid(Tile[][] grid) {
         this.grid = grid;
@@ -71,20 +60,24 @@ public class Board {
         this.writer.writeMessage(String.format("Board has been initialized at size %s.\n", this.getBoardSize()));
     }
 
+    public int getBoardSize() {
+        return this.boardSize;
+    }
+
     public void setBoardSize(int boardSize) {
         this.boardSize = boardSize;
     }
 
-    public int getBoardSize() {
-        return this.boardSize;
+    public State getGameState() {
+        return this.gameState;
     }
 
     public void setGameState(State state) {
         this.gameState = state;
     }
 
-    public State getGameState() {
-        return this.gameState;
+    public GameMode getGameMode() {
+        return this.gameMode;
     }
 
     public void setGameMode(GameMode mode) {
@@ -99,12 +92,8 @@ public class Board {
         this.writer.writeMessage(String.format("Game mode has been switched to %s.\n", this.gameMode));
     }
 
-    public GameMode getGameMode() {
-        return this.gameMode;
-    }
-
     /**
-     * @param row The row index.
+     * @param row    The row index.
      * @param column The column index.
      * @return The tile at the given (row, column) index.
      */
@@ -144,7 +133,8 @@ public class Board {
 
     /**
      * Places a tile from the active player at the given (row, column) index.
-     * @param row The row index of the tile to be placed.
+     *
+     * @param row    The row index of the tile to be placed.
      * @param column The column index of the tile to be placed.
      */
     public void makeMove(int row, int column) {
@@ -170,7 +160,8 @@ public class Board {
 
     /**
      * Places a tile in a random location on behalf of an active player who has selected the Computer play style.
-     * @see sprint_4.src.Player.PlayStyle
+     *
+     * @see sprint_5.src.Player.PlayStyle
      */
     public void makeComputerMove() {
         if (this.boardHasWinner()) return;
@@ -230,7 +221,7 @@ public class Board {
                         Player playerLost = playerWon == playerOne ? playerTwo : playerOne;
                         this.writer.writeMessage(
                                 String.format("%s has won with %s points! %s finished with %s points.\n",
-                                playerWon.getName(), playerWon.getPoints(), playerLost.getName(), playerLost.getPoints())
+                                        playerWon.getName(), playerWon.getPoints(), playerLost.getName(), playerLost.getPoints())
                         );
                         if (this.recordGame) this.writer.writeToFile();
                     } else if (hasDrawGeneral()) {
@@ -278,19 +269,22 @@ public class Board {
                         Triplet win = new Triplet(new Pair(row, col), new Pair(row + 1, col - 1), new Pair(row + 2, col - 2));
                         addWin(win);
                     }
-                } if (col < getBoardSize() - 2 && row < getBoardSize() - 2) {
+                }
+                if (col < getBoardSize() - 2 && row < getBoardSize() - 2) {
                     // Check forward diagonal win
                     if (checkDiagonalWin(row, col)) {
                         Triplet win = new Triplet(new Pair(row, col), new Pair(row + 1, col + 1), new Pair(row + 2, col + 2));
                         addWin(win);
                     }
-                } if (col < getBoardSize() - 2) {
+                }
+                if (col < getBoardSize() - 2) {
                     // Check horizontal win
                     if (checkHorizontalWin(row, col)) {
                         Triplet win = new Triplet(new Pair(row, col), new Pair(row, col + 1), new Pair(row, col + 2));
                         addWin(win);
                     }
-                } if (row < getBoardSize() - 2) {
+                }
+                if (row < getBoardSize() - 2) {
                     // Check vertical win
                     if (checkVerticalWin(row, col)) {
                         Triplet win = new Triplet(new Pair(row, col), new Pair(row + 1, col), new Pair(row + 2, col));
@@ -302,17 +296,28 @@ public class Board {
     }
 
     private boolean hasWonGeneral() {
-        {}
+        {
+        }
         return !playerOne.getPoints().equals(playerTwo.getPoints());
     }
 
     private boolean hasDrawGeneral() {
-        {}
+        {
+        }
         return playerOne.getPoints().equals(playerTwo.getPoints());
     }
 
     private boolean hasWonSimple() {
-        {}
+        {
+        }
         return playerOne.getPoints() == 1 || playerTwo.getPoints() == 1;
+    }
+
+    public enum State {
+        INIT, PLAYING, DRAW, PLAYER_ONE_WON, PLAYER_TWO_WON
+    }
+
+    public enum GameMode {
+        Simple, General
     }
 }

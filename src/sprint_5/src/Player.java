@@ -1,16 +1,18 @@
-package sprint_4.src;
+package sprint_5.src;
 
-import sprint_4.src.Tile.TileValue;
+import sprint_5.src.Tile.TileValue;
 
 public class Player {
-    public enum PlayStyle {
-        Human, Computer
-    }
-
+    private final String name;
     private Tile tile;
     private PlayStyle style;
-    private final String name;
     private Integer points;
+    public Player(TileValue value, String name) {
+        this.name = name;
+        this.tile = new Tile(value);
+        this.style = PlayStyle.Human;
+        this.points = 0;
+    }
 
     public Tile getTile() {
         return this.tile;
@@ -48,10 +50,7 @@ public class Player {
         return String.format("%s (%s, %s)", this.name, this.tile, this.style);
     }
 
-    public Player(TileValue value, String name) {
-        this.name = name;
-        this.tile = new Tile(value);
-        this.style = PlayStyle.Human;
-        this.points = 0;
+    public enum PlayStyle {
+        Human, Computer
     }
 }

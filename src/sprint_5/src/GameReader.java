@@ -1,4 +1,5 @@
-package sprint_4.src;
+package sprint_5.src;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -9,36 +10,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class GameReader {
-    public static class Move {
-        public final String player;
-        public final String tile;
-        public final String style;
-        final int row;
-        final int column;
-
-        public Move(String player, String tile, String style, String row, String column) {
-            this.player = player;
-            this.tile = tile;
-            this.style = style;
-            this.row = Integer.parseInt(row);
-            this.column = Integer.parseInt(column);
-        }
-
-        @Override
-        public String toString() {
-            return "Move{" +
-                    "player='" + player + '\'' +
-                    ", tile='" + tile + '\'' +
-                    ", style='" + style + '\'' +
-                    ", row=" + row +
-                    ", column=" + column +
-                    '}';
-        }
-    }
     ArrayList<Move> moves;
     int boardSize;
     Board.GameMode gameMode;
-
     public GameReader(File file) {
         Scanner reader = null;
         try {
@@ -97,5 +71,32 @@ public class GameReader {
             moves.add(new Move(player, tile, style, row, column));
         }
         return moves;
+    }
+
+    public static class Move {
+        public final String player;
+        public final String tile;
+        public final String style;
+        final int row;
+        final int column;
+
+        public Move(String player, String tile, String style, String row, String column) {
+            this.player = player;
+            this.tile = tile;
+            this.style = style;
+            this.row = Integer.parseInt(row);
+            this.column = Integer.parseInt(column);
+        }
+
+        @Override
+        public String toString() {
+            return "Move{" +
+                    "player='" + player + '\'' +
+                    ", tile='" + tile + '\'' +
+                    ", style='" + style + '\'' +
+                    ", row=" + row +
+                    ", column=" + column +
+                    '}';
+        }
     }
 }

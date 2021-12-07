@@ -1,11 +1,11 @@
-package sprint_4.src;
+package sprint_5.src;
 
 public class Tile implements Comparable<Tile> {
-    public enum TileValue {
-        S, O, None
-    }
-
     private TileValue value;
+
+    public Tile(TileValue value) {
+        this.setValue(value);
+    }
 
     public TileValue getValue() {
         return this.value;
@@ -30,15 +30,15 @@ public class Tile implements Comparable<Tile> {
         }
     }
 
-    public Tile(TileValue value) {
-        this.setValue(value);
-    }
-
     public int compareTo(Tile other) {
         if (this.getValue() == other.getValue()) {
             return 0;
         } else {
             return 1;
         }
+    }
+
+    public enum TileValue {
+        S, O, None
     }
 }

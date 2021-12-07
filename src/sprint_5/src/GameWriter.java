@@ -1,14 +1,15 @@
-package sprint_4.src;
+package sprint_5.src;
+
 import java.io.File;
-import java.io.IOException;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 public class GameWriter {
     private final String filename;
-    private FileWriter writer;
     private final StringBuilder buffer;
+    private FileWriter writer;
 
     public GameWriter() {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss");

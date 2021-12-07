@@ -1,11 +1,10 @@
-package sprint_4.src;
+package sprint_5.src;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.FileNotFoundException;
 
 public class GUI extends JFrame {
 
@@ -31,6 +30,10 @@ public class GUI extends JFrame {
         pack();
         setTitle("SOS");
         setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new GUI(new Board()));
     }
 
     public Board getBoard() {
@@ -76,7 +79,6 @@ public class GUI extends JFrame {
         fileChooser.showOpenDialog(new JFrame("Open File"));
         GameReader reader = new GameReader(fileChooser.getSelectedFile());
 
-        System.out.println(reader.boardSize);
         this.board = new Board(reader.boardSize);
         if (reader.gameMode != null) board.setGameMode(reader.gameMode);
         ResetGame();
@@ -138,14 +140,18 @@ public class GUI extends JFrame {
         });
 
         incButton.addActionListener(e -> {
-            if (this.board.getBoardSize() >= this.board.MAX_BOARD_SIZE) { return; }
+            if (this.board.getBoardSize() >= this.board.MAX_BOARD_SIZE) {
+                return;
+            }
             board.setGrid(new Tile[board.getBoardSize() + 1][board.getBoardSize() + 1]);
             board.setBoardSize(board.getBoardSize() + 1);
             ResetGame();
         });
 
         decButton.addActionListener(e -> {
-            if (board.getBoardSize() <= board.MIN_BOARD_SIZE) { return; }
+            if (board.getBoardSize() <= board.MIN_BOARD_SIZE) {
+                return;
+            }
             board.setGrid(new Tile[board.getBoardSize() - 1][board.getBoardSize() - 1]);
             board.setBoardSize(board.getBoardSize() - 1);
             ResetGame();
@@ -210,7 +216,7 @@ public class GUI extends JFrame {
         menu.add(o);
         menu.add(human);
         menu.add(comp);
-        menu.setPreferredSize(new Dimension(100, CANVAS_HEIGHT+15));
+        menu.setPreferredSize(new Dimension(100, CANVAS_HEIGHT + 15));
         return menu;
     }
 
@@ -229,7 +235,9 @@ public class GUI extends JFrame {
                     }
                     repaint();
                 }
-                public void mouseReleased(MouseEvent e) {}
+
+                public void mouseReleased(MouseEvent e) {
+                }
             });
         }
 
@@ -247,10 +255,10 @@ public class GUI extends JFrame {
 
             for (int row = 1; row < board.getBoardSize(); row++) {
                 g.fillRoundRect(0, CELL_SIZE * row - GRID_WIDTH_HALF,
-                        CANVAS_WIDTH-1, GRID_WIDTH, GRID_WIDTH, GRID_WIDTH);
+                        CANVAS_WIDTH - 1, GRID_WIDTH, GRID_WIDTH, GRID_WIDTH);
 
                 g.fillRoundRect(CELL_SIZE * row - GRID_WIDTH_HALF, 0,
-                        GRID_WIDTH, CANVAS_HEIGHT-1, GRID_WIDTH, GRID_WIDTH);
+                        GRID_WIDTH, CANVAS_HEIGHT - 1, GRID_WIDTH, GRID_WIDTH);
             }
         }
 
@@ -301,9 +309,5 @@ public class GUI extends JFrame {
                     break;
             }
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new GUI(new Board()));
     }
 }

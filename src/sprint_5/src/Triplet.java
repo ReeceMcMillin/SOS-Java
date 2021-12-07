@@ -1,13 +1,20 @@
-package sprint_4.src;
+package sprint_5.src;
 
 /**
  * Triplet contains a triplet of Pairs, meant to represent a 3-tuple of Tiles on the board.
+ *
  * @see Pair
  */
 public class Triplet implements Comparable<Triplet> {
     public final Pair first;
     public final Pair second;
     public final Pair third;
+
+    public Triplet(Pair first, Pair second, Pair third) {
+        this.first = first;
+        this.second = second;
+        this.third = third;
+    }
 
     public String toString() {
         return String.format("[%s, %s, %s]", this.first, this.second, this.third);
@@ -20,11 +27,5 @@ public class Triplet implements Comparable<Triplet> {
         } else {
             return -1;
         }
-    }
-
-    public Triplet(Pair first, Pair second, Pair third) {
-        this.first = first;
-        this.second = second;
-        this.third = third;
     }
 }

@@ -1,15 +1,15 @@
-package sprint_4.test;
+package sprint_5.test;
 
 import org.junit.Before;
 import org.junit.Test;
-import sprint_4.src.Board;
-import sprint_4.src.GUI;
-import sprint_4.src.Player;
-import sprint_4.src.Tile;
+import sprint_5.src.Board;
+import sprint_5.src.GUI;
+import sprint_5.src.Player;
+import sprint_5.src.Tile;
 
 public class TestBoardGUI {
-    private Board board;
     private final int sleepTime = 0;
+    private Board board;
 
     @Before
     public void setUp() {
@@ -22,10 +22,10 @@ public class TestBoardGUI {
         board = new Board(9);
         GUI gui = new GUI(board);
         board.setGameMode(Board.GameMode.General);
-        assert(gui.getBoard().getGameMode() == Board.GameMode.General);
+        assert (gui.getBoard().getGameMode() == Board.GameMode.General);
 
         board.setGameMode(Board.GameMode.Simple);
-        assert(gui.getBoard().getGameMode() == Board.GameMode.Simple);
+        assert (gui.getBoard().getGameMode() == Board.GameMode.Simple);
 
         try {
             Thread.sleep(sleepTime);
@@ -41,13 +41,13 @@ public class TestBoardGUI {
         board = new Board(9);
         GUI gui = new GUI(board);
         board.setGameMode(Board.GameMode.General);
-        assert(gui.getBoard().getGameMode() == Board.GameMode.General);
+        assert (gui.getBoard().getGameMode() == Board.GameMode.General);
 
-        board.makeMove(1,1);
+        board.makeMove(1, 1);
 
         board.setGameMode(Board.GameMode.Simple);
         //Game mode should not have updated
-        assert(gui.getBoard().getGameMode() == Board.GameMode.General);
+        assert (gui.getBoard().getGameMode() == Board.GameMode.General);
 
         try {
             Thread.sleep(sleepTime);
@@ -65,13 +65,13 @@ public class TestBoardGUI {
         board.makeMove(1, 2);
 
         //Test that move was made correctly
-        assert(gui.getBoard().getTile(1, 2).getValue() == Tile.TileValue.S);
+        assert (gui.getBoard().getTile(1, 2).getValue() == Tile.TileValue.S);
         gui.getBoard().initBoard();
 
         // Test that ALL tiles are registered as Tile.TileValue.None
         for (int row = 0; row < board.getBoardSize(); row++) {
             for (int col = 0; col < board.getBoardSize(); col++) {
-                assert(gui.getBoard().getTile(row, col).getValue() == Tile.TileValue.None);
+                assert (gui.getBoard().getTile(row, col).getValue() == Tile.TileValue.None);
             }
         }
 
@@ -89,7 +89,7 @@ public class TestBoardGUI {
         board = new Board(9);
         GUI gui = new GUI(board);
 
-        assert(gui.getBoard() != null);
+        assert (gui.getBoard() != null);
 
         try {
             Thread.sleep(sleepTime);
@@ -108,7 +108,7 @@ public class TestBoardGUI {
         // Player 1 begins by default with tile S, this ensures O is selected before a move is made.
         gui.getBoard().playerOne.setTile(Tile.TileValue.O);
         board.makeMove(0, 0);
-        assert(gui.getBoard().getTile(0, 0).getValue() == Tile.TileValue.O);
+        assert (gui.getBoard().getTile(0, 0).getValue() == Tile.TileValue.O);
 
         try {
             Thread.sleep(sleepTime);
@@ -129,7 +129,7 @@ public class TestBoardGUI {
         // Player 2 should not be able to place their tile here, leaving it an S and not causing an error.
         board.makeMove(1, 1);
 
-        assert(gui.getBoard().getTile(1, 1).getValue() == Tile.TileValue.S);
+        assert (gui.getBoard().getTile(1, 1).getValue() == Tile.TileValue.S);
 
         try {
             Thread.sleep(sleepTime);
@@ -149,9 +149,9 @@ public class TestBoardGUI {
         board.makeMove(1, 1);
         board.makeMove(8, 8);
 
-        assert(gui.getBoard().getTile(0, 0).getValue() == Tile.TileValue.S);
-        assert(gui.getBoard().getTile(1, 1).getValue() == Tile.TileValue.O);
-        assert(gui.getBoard().getTile(8, 8).getValue() == Tile.TileValue.S);
+        assert (gui.getBoard().getTile(0, 0).getValue() == Tile.TileValue.S);
+        assert (gui.getBoard().getTile(1, 1).getValue() == Tile.TileValue.O);
+        assert (gui.getBoard().getTile(8, 8).getValue() == Tile.TileValue.S);
 
 
         try {
@@ -173,8 +173,8 @@ public class TestBoardGUI {
         board.makeMove(0, 1);
         board.makeMove(0, 2);
 
-        assert(gui.getBoard().getGameMode() == Board.GameMode.Simple);
-        assert(gui.getBoard().getGameState() == Board.State.PLAYER_ONE_WON);
+        assert (gui.getBoard().getGameMode() == Board.GameMode.Simple);
+        assert (gui.getBoard().getGameState() == Board.State.PLAYER_ONE_WON);
 
         try {
             Thread.sleep(sleepTime);
@@ -193,7 +193,7 @@ public class TestBoardGUI {
         board.playerTwo.setTile(Tile.TileValue.S);
         board.setGameMode(Board.GameMode.Simple);
 
-        assert(gui.getBoard().getGameMode() == Board.GameMode.Simple);
+        assert (gui.getBoard().getGameMode() == Board.GameMode.Simple);
 
         for (int i = 0; i < board.getBoardSize(); i++) {
             for (int j = 0; j < board.getBoardSize(); j++) {
@@ -207,7 +207,7 @@ public class TestBoardGUI {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        assert(gui.getBoard().getGameState() == Board.State.DRAW);
+        assert (gui.getBoard().getGameState() == Board.State.DRAW);
 
 
     }
@@ -224,8 +224,8 @@ public class TestBoardGUI {
             }
         }
 
-        assert(gui.getBoard().getGameMode() == Board.GameMode.General);
-        assert(gui.getBoard().getGameState() == Board.State.PLAYER_ONE_WON);
+        assert (gui.getBoard().getGameMode() == Board.GameMode.General);
+        assert (gui.getBoard().getGameState() == Board.State.PLAYER_ONE_WON);
 
         try {
             Thread.sleep(sleepTime);
@@ -234,6 +234,7 @@ public class TestBoardGUI {
             e.printStackTrace();
         }
     }
+
     // AC7.2: General game, no winner
     @Test
     public void testGeneralGameNoWinner() {
@@ -246,8 +247,8 @@ public class TestBoardGUI {
             }
         }
 
-        assert(gui.getBoard().getGameMode() == Board.GameMode.General);
-        assert(gui.getBoard().getGameState() == Board.State.DRAW);
+        assert (gui.getBoard().getGameMode() == Board.GameMode.General);
+        assert (gui.getBoard().getGameState() == Board.State.DRAW);
 
         try {
             Thread.sleep(sleepTime);
@@ -265,8 +266,8 @@ public class TestBoardGUI {
 
         board.makeMove(1, 2);
 
-        assert(board.playerTwo.getStyle() == Player.PlayStyle.Computer);
-        assert(gui.getBoard().getEmptyTiles().size() == 7);
+        assert (board.playerTwo.getStyle() == Player.PlayStyle.Computer);
+        assert (gui.getBoard().getEmptyTiles().size() == 7);
 
         try {
             Thread.sleep(sleepTime);
@@ -291,6 +292,6 @@ public class TestBoardGUI {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        assert(gui.getBoard().isFull());
+        assert (gui.getBoard().isFull());
     }
 }
