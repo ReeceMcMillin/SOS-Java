@@ -7,6 +7,10 @@ import sprint_5.src.GUI;
 import sprint_5.src.Player;
 import sprint_5.src.Tile;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.*;
+
 public class TestBoardGUI {
     private final int sleepTime = 0;
     private Board board;
@@ -293,5 +297,77 @@ public class TestBoardGUI {
             e.printStackTrace();
         }
         assert (gui.getBoard().isFull());
+    }
+
+    @Test
+    public void testRecordGame() {
+        // Because this test is so complicated, here's an overview:
+        //   1. Generate a list of files present before the game begins.
+        //   2. Have the board play a Simple game.
+        //   3. Generate a list of files present after the game ends.
+        //   4. Get a hook to the most recent file (this recording) and delete it on exit.
+        //   5. Read the file.
+        //   6. Assert the following:
+        //      a) The initial file list doesn't contain the recording name.
+        //      b) The final file count is 1 greater than the initial file count.
+        //      c) The contents of the most recent recording file are what we expect.
+        String[] initialFileList = Objects.requireNonNull(new File(String.format("%s/recorded/", System.getProperty("user.dir"))).list());
+        int initialFileCount = initialFileList.length;
+
+        // When files are sorted, the most recent recording should be second to last (behind the README).
+        board = new Board(3);
+        board.setGameMode(Board.GameMode.Simple);
+        GUI gui  = new GUI(board);
+        gui.getBoard().toggleRecording();
+
+
+        for (int i = 0; i < board.getBoardSize(); i++) {
+            board.makeMove(i, 0);
+        }
+
+        String[] finalFileList = Objects.requireNonNull(new File(String.format("%s/recorded/", System.getProperty("user.dir"))).list());
+        Arrays.sort(finalFileList);
+        int finalFileCount = finalFileList.length;
+        String lastRecordingName = finalFileList[finalFileCount - 2];
+        File lastRecordingFile = new File(System.getProperty("user.dir") + "/recorded/" + lastRecordingName);
+        lastRecordingFile.deleteOnExit();
+
+        Scanner reader = null;
+        try {
+            reader = new Scanner(lastRecordingFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        assert reader != null;
+
+        StringBuilder contents;
+        contents = new StringBuilder();
+        while (reader.hasNextLine()) {
+            try {
+                contents.append(reader.nextLine()).append("\n");
+            } catch (NoSuchElementException ex) {
+                break;
+            }
+        }
+
+        String expected = "Board has been initialized at size 3.\n" +
+                "Game mode has been switched to Simple.\n" +
+                "Player 1 (S, Human): (0,0)\n" +
+                "Player 2 (O, Human): (1,0)\n" +
+                "Player 1 (S, Human): (2,0)\n" +
+                "Player 1 has won!\n";
+
+        try {
+            Thread.sleep(sleepTime);
+            gui.dispose();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        assert (!Arrays.asList(initialFileList).contains(lastRecordingName));
+        assert (finalFileCount == initialFileCount + 1);
+        assert (contents.toString().equals(expected));
+
     }
 }
